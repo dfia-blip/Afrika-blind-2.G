@@ -158,35 +158,30 @@ svg{
   cursor:pointer
 }
 
-.physicalArea{
-  fill:#8bc34a;
-  fill-opacity:.32;
-  stroke:#4d7c2a;
-  stroke-width:2;
-  pointer-events:none
+.optionMarker{
+  cursor:pointer
 }
 
-.physicalLine{
-  fill:none;
-  stroke:#2d78b7;
-  stroke-width:4;
-  stroke-linecap:round;
-  pointer-events:none
-}
-
-.physicalPoint{
-  fill:#4caf50;
+.optionCircle{
+  fill:#2d78b7;
+  fill-opacity:.9;
   stroke:#fff;
-  stroke-width:2;
-  pointer-events:none
+  stroke-width:2.5
 }
 
-.revealLabel{
-  font-size:13px;
+.optionCircle.correct{
+  fill:#64c174
+}
+
+.optionCircle.wrong{
+  fill:#e57373
+}
+
+.optionLabel{
+  fill:#fff;
+  font-size:15px;
   font-weight:800;
-  paint-order:stroke;
-  stroke:#fff;
-  stroke-width:4px
+  pointer-events:none
 }
 
 #legend{
@@ -630,6 +625,72 @@ const CITIES = [
 
 
 /* =========================================================
+   POMOCNÉ OBJEKTY PRO NABÍDKU 3 MOŽNOSTÍ
+========================================================= */
+
+const CITY_ITEMS =
+
+CITIES.map((c,i)=>({
+
+type:"city",
+
+id:i,
+
+name:c[0],
+
+lon:c[1],
+
+lat:c[2]
+
+}));
+
+
+const PHYSICAL_ITEMS =
+
+PHYSICAL.map((p,i)=>({
+
+type:"physical",
+
+id:i,
+
+name:p[0],
+
+lon:p[1],
+
+lat:p[2],
+
+shape:p[3]
+
+}));
+
+
+function pickDistractors(pool,excludeId,count){
+
+const filtered=
+
+pool.filter(item=>item.id!==excludeId);
+
+return shuffle(filtered).slice(0,count);
+
+}
+
+
+function buildOptions(item){
+
+const pool=
+
+item.type==="city"?CITY_ITEMS:PHYSICAL_ITEMS;
+
+const distractors=
+
+pickDistractors(pool,item.id,2);
+
+return shuffle([item,...distractors]);
+
+}
+
+
+/* =========================================================
    VŠECHNY STÁTY AFRIKY – PODKLAD MAPY
 ========================================================= */
 
@@ -639,12 +700,78 @@ const AFRICA_IDS = new Set([
 "174","175","178","180","204","226","231","232",
 "262","266","270","288","324","384","404","426",
 "430","434","450","454","466","478","480","504",
-"508","516","562","566","570","578","586","646",
-"678","686","690","694","706","710","716","728",
-"729","732","748","768","788","800","818","834",
-"854","894"
+"508","516","562","566","624","646","678","686",
+"690","694","706","710","716","728","729","732",
+"748","768","788","800","818","834","854","894"
 
 ]);
+
+
+/* =========================================================
+   ČESKÉ NÁZVY VŠECH AFRICKÝCH ZEMÍ – PRO ZPĚTNOU VAZBU
+   (co bylo zakliknuto při špatné odpovědi)
+========================================================= */
+
+const COUNTRY_NAMES = {
+
+"012":"Alžírsko",
+"024":"Angola",
+"072":"Botswana",
+"108":"Burundi",
+"120":"Kamerun",
+"132":"Kapverdy",
+"140":"Středoafrická republika",
+"148":"Čad",
+"174":"Komory",
+"175":"Mayotte",
+"178":"Kongo (Konžská republika)",
+"180":"DR Kongo",
+"204":"Benin",
+"226":"Rovníková Guinea",
+"231":"Etiopie",
+"232":"Eritrea",
+"262":"Džibutsko",
+"266":"Gabon",
+"270":"Gambie",
+"288":"Ghana",
+"324":"Guinea",
+"384":"Pobřeží slonoviny",
+"404":"Keňa",
+"426":"Lesotho",
+"430":"Libérie",
+"434":"Libye",
+"450":"Madagaskar",
+"454":"Malawi",
+"466":"Mali",
+"478":"Mauritánie",
+"480":"Mauricius",
+"504":"Maroko",
+"508":"Mosambik",
+"516":"Namibie",
+"562":"Niger",
+"566":"Nigérie",
+"624":"Guinea-Bissau",
+"646":"Rwanda",
+"678":"Svatý Tomáš a Princův ostrov",
+"686":"Senegal",
+"690":"Seychely",
+"694":"Sierra Leone",
+"706":"Somálsko",
+"710":"Jižní Afrika (JAR)",
+"716":"Zimbabwe",
+"728":"Jižní Súdán",
+"729":"Súdán",
+"732":"Západní Sahara",
+"748":"Esvatini",
+"768":"Togo",
+"788":"Tunisko",
+"800":"Uganda",
+"818":"Egypt",
+"834":"Tanzanie",
+"854":"Burkina Faso",
+"894":"Zambie"
+
+};
 
 
 /* =========================================================
@@ -953,43 +1080,174 @@ layer
 
 }else{
 
-layer
-
-.append("rect")
-
-.attr("x",0)
-
-.attr("y",0)
-
-.attr("width",vb[2])
-
-.attr("height",vb[3])
-
-.attr("fill","transparent")
-
-.on("click",answerCity);
+renderOptionMarkers(layer);
 
 }
 
 }else{
 
-layer
-
-.append("rect")
-
-.attr("x",0)
-
-.attr("y",0)
-
-.attr("width",vb[2])
-
-.attr("height",vb[3])
-
-.attr("fill","transparent")
-
-.on("click",answerPhysical);
+renderOptionMarkers(layer);
 
 }
+
+}
+
+
+/* =========================================================
+   3 MOŽNOSTI NA MAPĚ (města / fyzická geografie)
+========================================================= */
+
+function renderOptionMarkers(layer){
+
+if(!current.options)return;
+
+const markers=[];
+
+
+current.options.forEach((opt,idx)=>{
+
+const xy=
+
+projection([opt.lon,opt.lat]);
+
+const g=
+
+layer.append("g")
+
+.attr("class","optionMarker")
+
+.attr(
+
+"transform",
+
+`translate(${xy[0]},${xy[1]})`
+
+);
+
+
+g.append("circle")
+
+.attr("class","optionCircle")
+
+.attr("r",17);
+
+
+g.append("text")
+
+.attr("class","optionLabel")
+
+.attr("text-anchor","middle")
+
+.attr("dy","0.35em")
+
+.text(idx+1);
+
+
+g.on("click",
+
+()=>chooseOption(opt,g)
+
+);
+
+
+markers.push({opt,g});
+
+});
+
+
+renderQuizLayers.markers=markers;
+
+}
+
+
+/* =========================================================
+   VÝBĚR MOŽNOSTI
+========================================================= */
+
+function chooseOption(opt,markerSel){
+
+if(locked)return;
+
+
+if(
+
+opt.type===current.type&&
+
+opt.id===current.id
+
+){
+
+correct++;
+
+markerSel
+
+.select(".optionCircle")
+
+.classed("correct",true);
+
+success(
+
+"✅ Správně!"
+
+);
+
+}else{
+
+wrong++;
+
+markerSel
+
+.select(".optionCircle")
+
+.classed("wrong",true);
+
+
+let msg=
+
+"❌ Špatně.<br>📍 Tvoje odpověď: "+
+
+opt.name;
+
+
+if(mode==="learn"){
+
+(renderQuizLayers.markers||[])
+
+.forEach(m=>{
+
+if(
+
+m.opt.type===current.type&&
+
+m.opt.id===current.id
+
+){
+
+m.g
+
+.select(".optionCircle")
+
+.classed("correct",true);
+
+}
+
+});
+
+msg+=
+
+"<br>✅ Správně je: "+
+
+current.name;
+
+}
+
+
+error(msg);
+
+}
+
+
+afterAnswer();
 
 }
 
@@ -1215,6 +1473,21 @@ current=
 questions[currentIndex];
 
 
+if(
+
+current.type==="city"||
+
+current.type==="physical"
+
+){
+
+current.options=
+
+buildOptions(current);
+
+}
+
+
 $("question").textContent=
 
 "Najdi na mapě: "+
@@ -1280,6 +1553,13 @@ id,
 );
 
 
+let msg=
+
+"❌ Špatně.<br>📍 Tvoje odpověď: "+
+
+(feature.properties.quizName||"neznámý stát");
+
+
 if(mode==="learn"){
 
 markState(
@@ -1290,23 +1570,16 @@ current.id,
 
 );
 
-error(
+msg+=
 
-"❌ To není "+
+"<br>✅ Správně je: "+
 
-(feature.properties.quizName||"tento stát")+
-
-".<br>✅ Správně je: "+
-
-current.name
-
-);
-
-}else{
-
-error("❌ Špatně.");
+current.name;
 
 }
+
+
+error(msg);
 
 }
 
@@ -1315,423 +1588,6 @@ afterAnswer();
 
 }
 
-
-/* =========================================================
-   PŘEVOD KLIKNUTÍ NA SOUŘADNICE MAPY
-========================================================= */
-
-function clickPoint(event){
-
-const rect=
-
-svg.node().getBoundingClientRect();
-
-const vb=
-
-svg
-
-.attr("viewBox")
-
-.split(" ")
-
-.map(Number);
-
-
-return [
-
-(event.clientX-rect.left)*vb[2]/rect.width,
-
-(event.clientY-rect.top)*vb[3]/rect.height
-
-];
-
-}
-
-
-function distance(a,b){
-
-return Math.hypot(
-
-a[0]-b[0],
-
-a[1]-b[1]
-
-);
-
-}
-
-
-/* =========================================================
-   MĚSTA
-========================================================= */
-
-function answerCity(event){
-
-if(locked)return;
-
-
-const click=
-
-clickPoint(event);
-
-
-const target=
-
-projection([
-
-current.lon,
-
-current.lat
-
-]);
-
-
-const width=
-
-+svg
-
-.attr("viewBox")
-
-.split(" ")[2];
-
-
-const tolerance=
-
-Math.max(
-
-22,
-
-width*.028
-
-);
-
-
-if(
-
-distance(
-
-click,
-
-target
-
-)<=tolerance
-
-){
-
-correct++;
-
-revealCurrent();
-
-success(
-
-"✅ Správně!"
-
-);
-
-}else{
-
-wrong++;
-
-
-if(mode==="learn"){
-
-revealCurrent();
-
-error(
-
-"❌ Tady město není.<br>"+
-
-"✅ Správně je: "+
-
-current.name
-
-);
-
-}else{
-
-error("❌ Špatně.");
-
-}
-
-}
-
-
-afterAnswer();
-
-}
-
-
-/* =========================================================
-   FYZICKÁ GEOGRAFIE
-========================================================= */
-
-function answerPhysical(event){
-
-if(locked)return;
-
-
-const click=
-
-clickPoint(event);
-
-
-const target=
-
-projection([
-
-current.lon,
-
-current.lat
-
-]);
-
-
-const width=
-
-+svg
-
-.attr("viewBox")
-
-.split(" ")[2];
-
-
-let tolerance;
-
-
-if(current.shape==="point"){
-
-tolerance=
-
-Math.max(
-
-18,
-
-width*.025
-
-);
-
-}else if(current.shape==="line"){
-
-tolerance=
-
-Math.max(
-
-30,
-
-width*.055
-
-);
-
-}else{
-
-tolerance=
-
-Math.max(
-
-48,
-
-width*.085
-
-);
-
-}
-
-
-if(
-
-distance(
-
-click,
-
-target
-
-)<=tolerance
-
-){
-
-correct++;
-
-revealCurrent();
-
-success(
-
-"✅ Správně!"
-
-);
-
-}else{
-
-wrong++;
-
-
-if(mode==="learn"){
-
-revealCurrent();
-
-error(
-
-"❌ Tady se pojem nenachází.<br>"+
-
-"✅ Správná poloha: "+
-
-current.name
-
-);
-
-}else{
-
-error("❌ Špatně.");
-
-}
-
-}
-
-
-afterAnswer();
-
-}
-
-
-/* =========================================================
-   ZOBRAZENÍ SPRÁVNÉ ODPOVĚDI
-========================================================= */
-
-function revealCurrent(){
-
-svg
-
-.selectAll(".revealLayer")
-
-.remove();
-
-
-const g=
-
-svg
-
-.append("g")
-
-.attr("class","revealLayer");
-
-
-if(current.type==="state"){
-
-g
-
-.append("path")
-
-.datum(current.feature)
-
-.attr("class","country answer")
-
-.attr("d",path);
-
-return;
-
-}
-
-
-const [x,y]=
-
-projection([
-
-current.lon,
-
-current.lat
-
-]);
-
-
-if(current.shape==="line"){
-
-g
-
-.append("path")
-
-.attr(
-
-"class",
-
-"physicalLine"
-
-)
-
-.attr(
-
-"d",
-
-`M ${x-48} ${y+24}
-
-Q ${x} ${y}
-
-${x+48} ${y-24}`
-
-);
-
-}else if(current.shape==="area"){
-
-g
-
-.append("ellipse")
-
-.attr(
-
-"class",
-
-"physicalArea"
-
-)
-
-.attr("cx",x)
-
-.attr("cy",y)
-
-.attr("rx",58)
-
-.attr("ry",34);
-
-}else{
-
-g
-
-.append("circle")
-
-.attr(
-
-"class",
-
-"physicalPoint"
-
-)
-
-.attr("cx",x)
-
-.attr("cy",y)
-
-.attr("r",9);
-
-}
-
-
-g
-
-.append("text")
-
-.attr(
-
-"class",
-
-"revealLabel"
-
-)
-
-.attr("x",x+10)
-
-.attr("y",y-10)
-
-.text(current.name);
-
-}
 
 
 /* =========================================================
