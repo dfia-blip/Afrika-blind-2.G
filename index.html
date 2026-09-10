@@ -4,279 +4,640 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Afrika – slepá mapa</title>
+<title>SMVV – Zeměpis – 2.G – Afrika</title>
 
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
 
 <style>
-* {
-    box-sizing: border-box;
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:#f5f5f7;
+  color:#111;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  text-align:center
 }
 
-body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-    background: #f5f5f7;
-    color: #111;
-    text-align: center;
+header{
+  padding:12px 10px 4px
 }
 
-h1 {
-    font-size: 28px;
-    margin: 18px 10px 10px;
+h1{
+  font-size:25px;
+  margin:5px 0
 }
 
-.controls {
-    display: flex;
-    justify-content: center;
-    gap: 14px;
-    flex-wrap: wrap;
-    margin: 18px 10px;
+h2{
+  font-size:22px;
+  margin:5px 0 12px
 }
 
-button {
-    border: none;
-    border-radius: 24px;
-    padding: 15px 25px;
-    font-size: 20px;
-    font-weight: 700;
-    cursor: pointer;
-    background: #ddd;
+.sub{
+  color:#666;
+  font-size:15px
 }
 
-button.active {
-    background: #111;
-    color: white;
+.controls,
+.choices{
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  flex-wrap:wrap;
+  margin:10px
 }
 
-#restart {
-    background: #666;
-    color: white;
-    margin: 10px auto 18px;
+button{
+  border:0;
+  border-radius:22px;
+  padding:12px 17px;
+  font-size:17px;
+  font-weight:750;
+  background:#ddd;
+  color:#111;
+  cursor:pointer
 }
 
-#info {
-    font-size: 22px;
-    font-weight: 700;
-    margin: 12px;
+button.active{
+  background:#111;
+  color:#fff
 }
 
-#question {
-    font-size: 27px;
-    font-weight: 800;
-    margin: 18px 10px 22px;
+#settings{
+  background:#fff;
+  border-radius:18px;
+  padding:10px;
+  margin:8px auto;
+  max-width:850px
 }
 
-#result {
-    min-height: 35px;
-    font-size: 21px;
-    font-weight: 700;
-    margin: 10px;
+#questionCount button{
+  font-size:15px;
+  padding:9px 13px
 }
 
-#mapBox {
-    width: calc(100% - 24px);
-    max-width: 850px;
-    margin: 0 auto 30px;
-    background: white;
-    border-radius: 28px;
-    padding: 12px;
-    overflow: hidden;
+#stats{
+  display:flex;
+  justify-content:center;
+  gap:16px;
+  flex-wrap:wrap;
+  font-size:17px;
+  font-weight:750;
+  margin:9px
 }
 
-svg {
-    display: block;
-    width: 100%;
-    height: auto;
+#question{
+  font-size:25px;
+  font-weight:800;
+  margin:14px 8px 5px
 }
 
-.country {
-    fill: #d9d9d9;
-    stroke: #888;
-    stroke-width: 0.7;
-    cursor: pointer;
-    transition: fill 0.15s;
+#progress{
+  font-size:16px;
+  color:#555;
+  font-weight:650
 }
 
-.country:hover {
-    fill: #c4c4c4;
+#result{
+  min-height:42px;
+  font-size:18px;
+  font-weight:750;
+  margin:9px
 }
 
-.country.correct {
-    fill: #63c174;
-    stroke: #398348;
-    stroke-width: 1.3;
+#mapBox{
+  width:calc(100% - 16px);
+  max-width:900px;
+  margin:8px auto 22px;
+  background:#fff;
+  border-radius:25px;
+  padding:5px;
+  overflow:hidden;
+  box-shadow:0 3px 18px #00000010
 }
 
-.country.wrong {
-    fill: #e57373;
-    stroke: #a33;
-    stroke-width: 1.3;
+svg{
+  display:block;
+  width:100%;
+  height:auto
 }
 
-.country.answer {
-    fill: #63c174;
-    stroke: #398348;
-    stroke-width: 1.5;
+.country{
+  fill:#d9d9d9;
+  stroke:#858585;
+  stroke-width:.7
 }
 
-.country.selected {
-    fill: #777;
+.country.correct{
+  fill:#64c174;
+  stroke:#347c43;
+  stroke-width:1.5
 }
 
-.island {
-    fill: #d9d9d9;
+.country.wrong{
+  fill:#e57373;
+  stroke:#a52e2e;
+  stroke-width:1.5
 }
 
-#score {
-    font-size: 22px;
-    font-weight: 800;
-    margin: 8px;
+.country.answer{
+  fill:#64c174;
+  stroke:#347c43;
+  stroke-width:2
 }
 
-#loading {
-    font-size: 20px;
-    padding: 30px;
+.hit{
+  fill:transparent;
+  stroke:transparent;
+  cursor:pointer
 }
 
-.hidden {
-    display: none;
+.physicalArea{
+  fill:#8bc34a;
+  fill-opacity:.32;
+  stroke:#4d7c2a;
+  stroke-width:2;
+  pointer-events:none
 }
 
-@media (max-width: 600px) {
+.physicalLine{
+  fill:none;
+  stroke:#2d78b7;
+  stroke-width:4;
+  stroke-linecap:round;
+  pointer-events:none
+}
 
-    h1 {
-        font-size: 25px;
-    }
+.physicalPoint{
+  fill:#4caf50;
+  stroke:#fff;
+  stroke-width:2;
+  pointer-events:none
+}
 
-    button {
-        font-size: 18px;
-        padding: 14px 22px;
-    }
+.revealLabel{
+  font-size:13px;
+  font-weight:800;
+  paint-order:stroke;
+  stroke:#fff;
+  stroke-width:4px
+}
 
-    #question {
-        font-size: 24px;
-    }
+#legend{
+  font-size:14px;
+  color:#666;
+  margin:0 8px 10px
+}
 
-    #mapBox {
-        width: calc(100% - 18px);
-        padding: 7px;
-        border-radius: 22px;
-    }
+#final{
+  background:#fff;
+  max-width:620px;
+  margin:15px auto 25px;
+  padding:22px;
+  border-radius:22px
+}
+
+.finalPercent{
+  font-size:42px;
+  font-weight:900;
+  margin:8px
+}
+
+.finalLine{
+  font-size:20px;
+  font-weight:750;
+  margin:7px
+}
+
+.hidden{
+  display:none!important
+}
+
+#loading{
+  font-size:20px;
+  padding:30px
+}
+
+@media(max-width:600px){
+
+  h1{
+    font-size:22px
+  }
+
+  #question{
+    font-size:23px
+  }
+
+  button{
+    font-size:16px;
+    padding:11px 15px
+  }
+
+  #mapBox{
+    width:calc(100% - 10px);
+    border-radius:21px
+  }
 }
 </style>
 </head>
 
 <body>
 
-<h1>🌍 Afrika – slepá mapa</h1>
+<header>
+
+<h1>🌍 SMVV – Zeměpis – 2.G</h1>
+
+<h2>Afrika</h2>
+
+<div class="sub">
+Slepá mapa • pojmy • 2 písemky
+</div>
+
+</header>
+
 
 <div class="controls">
 
-    <button id="learnBtn" class="active">
-        📚 Výuka
-    </button>
-
-    <button id="testBtn">
-        📝 Test
-    </button>
-
-</div>
-
-<button id="restart">
-    🔄 Restart
+<button id="physicalBtn" class="active">
+🗺️ I. Fyzická geografie
 </button>
 
-<div id="info">
-    <span id="modeText">Výuka</span>
-    • Správně: <span id="correct">0</span>
+<button id="statesBtn">
+🌍 II. Státy a města
+</button>
+
 </div>
 
-<div id="score" class="hidden">
-    Úspěšnost: <span id="percent">0</span> %
+
+<div class="controls">
+
+<button id="learnBtn" class="active">
+📚 Výuka
+</button>
+
+<button id="testBtn">
+📝 Test
+</button>
+
 </div>
+
+
+<div id="settings">
+
+<b>Počet otázek:</b>
+
+<div id="questionCount" class="controls">
+
+<button data-count="10" class="active">10</button>
+
+<button data-count="20">20</button>
+
+<button data-count="30">30</button>
+
+<button data-count="50">50</button>
+
+</div>
+
+</div>
+
+
+<div id="stats">
+
+<span>
+✅ Správně:
+<span id="correct">0</span>
+</span>
+
+<span>
+❌ Chybně:
+<span id="wrong">0</span>
+</span>
+
+<span>
+🎯 Úspěšnost:
+<span id="percent">0</span> %
+</span>
+
+</div>
+
 
 <div id="question">
-    Načítám mapu…
+Načítám mapu…
 </div>
+
+
+<div id="progress"></div>
+
 
 <div id="result"></div>
 
-<div id="mapBox">
-    <div id="loading">
-        Načítám správnou mapu Afriky…
-    </div>
 
-    <svg id="map"></svg>
+<div id="mapBox">
+
+<div id="loading">
+Načítám kompletní mapu Afriky…
+</div>
+
+<svg id="map"></svg>
+
+</div>
+
+
+<div id="legend">
+
+Ve výuce se po chybě zobrazí správná poloha.
+V testu se správná odpověď neukazuje.
+
+</div>
+
+
+<div id="final" class="hidden">
+
+<h2>🎉 Písemka dokončena</h2>
+
+<div class="finalPercent">
+
+<span id="finalPercent">0</span> %
+
+</div>
+
+<div class="finalLine">
+
+Správně:
+<span id="finalCorrect">0</span>
+/
+<span id="finalTotal">0</span>
+
+</div>
+
+<div class="finalLine">
+
+Chybně:
+<span id="finalWrong">0</span>
+
+</div>
+
+<div id="finalMessage" class="finalLine"></div>
+
+<div class="controls">
+
+<button id="againBtn">
+🔄 Nová písemka
+</button>
+
+<button id="learnAgainBtn">
+📚 Procvičovat
+</button>
+
+</div>
+
 </div>
 
 
 <script>
 
 /* =========================================================
-   NASTAVENÍ
+   I. FYZICKÁ GEOGRAFIE – 50 POJMŮ
 ========================================================= */
 
-const AFRICAN_COUNTRIES = new Set([
+const PHYSICAL = [
 
-    "Algeria",
-    "Angola",
-    "Benin",
-    "Botswana",
-    "Burkina Faso",
-    "Burundi",
-    "Cameroon",
-    "Central African Republic",
-    "Chad",
-    "Comoros",
-    "Democratic Republic of the Congo",
-    "Republic of the Congo",
-    "Djibouti",
-    "Egypt",
-    "Equatorial Guinea",
-    "Eritrea",
-    "Eswatini",
-    "Ethiopia",
-    "Gabon",
-    "Gambia",
-    "Ghana",
-    "Guinea",
-    "Guinea-Bissau",
-    "Ivory Coast",
-    "Côte d'Ivoire",
-    "Kenya",
-    "Lesotho",
-    "Liberia",
-    "Libya",
-    "Madagascar",
-    "Malawi",
-    "Mali",
-    "Mauritania",
-    "Mauritius",
-    "Morocco",
-    "Mozambique",
-    "Namibia",
-    "Niger",
-    "Nigeria",
-    "Rwanda",
-    "São Tomé and Príncipe",
-    "Senegal",
-    "Seychelles",
-    "Sierra Leone",
-    "Somalia",
-    "South Africa",
-    "South Sudan",
-    "Sudan",
-    "Tanzania",
-    "Togo",
-    "Tunisia",
-    "Uganda",
-    "Zambia",
-    "Zimbabwe",
+["Velká Syrta",17.2,32.0,"point"],
 
-    /* přidáno pro zobrazení západní Sahary */
-    "Western Sahara"
+["Gibraltarský průliv",-5.5,35.95,"point"],
+
+["Guinejský záliv",3.0,2.0,"area"],
+
+["Mosambický průliv",42.0,-17.0,"area"],
+
+["Adenský záliv",48.0,12.5,"area"],
+
+["průliv Báb al-Mandab",43.3,12.6,"point"],
+
+["Rudé moře",38.5,20.0,"area"],
+
+["Suezský průplav",32.35,30.5,"line"],
+
+["mys Dobré naděje",18.47,-34.36,"point"],
+
+["Střelkový mys",20.0,-34.83,"point"],
+
+["Somálský poloostrov",49.5,8.0,"area"],
+
+["Madeira",-16.9,32.75,"point"],
+
+["Kanárské ostrovy",-15.5,28.3,"point"],
+
+["Zelený mys",-25.0,14.9,"point"],
+
+["Kapverdy",-23.5,15.1,"point"],
+
+["Madagaskar",46.7,-18.8,"area"],
+
+["Mauricius",57.5,-20.2,"point"],
+
+["Réunion",55.55,-21.12,"point"],
+
+["Seychely",55.45,-4.65,"point"],
+
+["Sokotra",54.0,12.5,"point"],
+
+["Čadská pánev",14.0,14.0,"area"],
+
+["Konžská pánev",23.0,-1.0,"area"],
+
+["Atlas",-5.0,31.0,"area"],
+
+["pohoří Ahaggar (Hoggar)",5.5,23.3,"area"],
+
+["Tibesti",18.0,21.0,"area"],
+
+["Dárfúr",24.0,13.0,"area"],
+
+["Etiopská vysočina",39.0,9.0,"area"],
+
+["hora Kilimandžáro (Uhuru)",37.35,-3.07,"point"],
+
+["Dračí hory",29.3,-29.5,"area"],
+
+["Assalská proláklina",42.4,11.6,"point"],
+
+["Kattarská proláklina",29.5,30.0,"point"],
+
+["Sahara",12.0,23.0,"area"],
+
+["Sahel",10.0,15.0,"area"],
+
+["poušť Kalahari",23.0,-23.0,"area"],
+
+["poušť Namib",15.0,-24.0,"area"],
+
+["šot al-Džaríd",8.0,34.3,"point"],
+
+["Čadské jezero",14.2,13.0,"point"],
+
+["Viktoriino jezero",33.0,-1.0,"point"],
+
+["Tana",37.3,12.0,"point"],
+
+["Tanganika",29.6,-6.1,"point"],
+
+["j. Malawi",34.8,-12.0,"point"],
+
+["Turkana (Rudolfovo j.)",36.1,3.5,"point"],
+
+["bažiny Okavango",22.5,-19.3,"area"],
+
+["Nil",31.5,27.0,"line"],
+
+["Bílý Nil",32.5,9.0,"line"],
+
+["Modrý Nil",37.2,11.5,"line"],
+
+["řeka Niger",3.5,15.0,"line"],
+
+["řeka Kongo",18.0,-2.5,"line"],
+
+["Zambezi",30.0,-16.0,"line"],
+
+["řeka Orange",20.0,-29.0,"line"]
+
+];
+
+
+/* =========================================================
+   II. STÁTY – 30
+========================================================= */
+
+const STATE_NAMES = {
+
+"818":"Egypt",
+
+"434":"Libye",
+
+"788":"Tunisko",
+
+"012":"Alžírsko",
+
+"504":"Maroko",
+
+"478":"Mauritánie",
+
+"686":"Senegal",
+
+"466":"Mali",
+
+"562":"Niger",
+
+"729":"Súdán",
+
+"728":"Jižní Súdán",
+
+"231":"Etiopie",
+
+"706":"Somálsko",
+
+"324":"Guinea",
+
+"384":"Pobřeží slonoviny",
+
+"288":"Ghana",
+
+"566":"Nigérie",
+
+"120":"Kamerun",
+
+"140":"Středoafrická republika",
+
+"180":"DR Kongo",
+
+"800":"Uganda",
+
+"404":"Keňa",
+
+"834":"Tanzanie",
+
+"024":"Angola",
+
+"516":"Namibie",
+
+"894":"Zambie",
+
+"508":"Mosambik",
+
+"716":"Zimbabwe",
+
+"072":"Botswana",
+
+"710":"Jižní Afrika (JAR)"
+
+};
+
+
+/* =========================================================
+   MĚSTA – 20
+========================================================= */
+
+const CITIES = [
+
+["Káhira",31.2357,30.0444],
+
+["Alexandrie",29.9187,31.2001],
+
+["Tripolis",13.1913,32.8872],
+
+["Tunis",10.1815,36.8065],
+
+["Alžír",3.0588,36.7538],
+
+["Rabat",-6.8498,34.0209],
+
+["Casablanca",-7.5898,33.5731],
+
+["Dakar",-17.4677,14.7167],
+
+["Abuja",7.3986,9.0765],
+
+["Lagos",3.3792,6.5244],
+
+["Chartúm",32.5599,15.5007],
+
+["Addis Abeba",38.7578,9.0300],
+
+["Nairobi",36.8219,-1.2921],
+
+["Kampala",32.5825,0.3476],
+
+["Dar es Salaam",39.2083,-6.7924],
+
+["Kinshasa",15.2663,-4.4419],
+
+["Luanda",13.2344,-8.8390],
+
+["Antananarivo",47.5079,-18.8792],
+
+["Johannesburg",28.0473,-26.2041],
+
+["Kapské Město",18.4241,-33.9249]
+
+];
+
+
+/* =========================================================
+   VŠECHNY STÁTY AFRIKY – PODKLAD MAPY
+========================================================= */
+
+const AFRICA_IDS = new Set([
+
+"012","024","072","108","120","132","140","148",
+"174","175","178","180","204","226","231","232",
+"262","266","270","288","324","384","404","426",
+"430","434","450","454","466","478","480","504",
+"508","516","562","566","570","578","586","646",
+"678","686","690","694","706","710","716","728",
+"729","732","748","768","788","800","818","834",
+"854","894"
 
 ]);
 
@@ -285,500 +646,1450 @@ const AFRICAN_COUNTRIES = new Set([
    PROMĚNNÉ
 ========================================================= */
 
-let mode = "learn";
+let svg=d3.select("#map");
 
-let countries = [];
-
-let currentCountry = null;
-
-let correct = 0;
-let attempts = 0;
-
-let locked = false;
-
-let svg;
+let projection;
 let path;
 
+let allAfrica=[];
+let quizStates=[];
 
-/* =========================================================
-   PRVKY
-========================================================= */
+let mode="learn";
+let section="physical";
 
-const learnBtn = document.getElementById("learnBtn");
-const testBtn = document.getElementById("testBtn");
-const restartBtn = document.getElementById("restart");
+let totalQuestions=10;
 
-const modeText = document.getElementById("modeText");
-const correctEl = document.getElementById("correct");
+let questions=[];
+let currentIndex=0;
 
-const scoreEl = document.getElementById("score");
-const percentEl = document.getElementById("percent");
+let current=null;
 
-const questionEl = document.getElementById("question");
-const resultEl = document.getElementById("result");
+let correct=0;
+let wrong=0;
 
-const loadingEl = document.getElementById("loading");
-
-svg = d3.select("#map");
+let locked=false;
 
 
 /* =========================================================
-   MAPA
+   NAČTENÍ MAPY
 ========================================================= */
 
-async function loadMap() {
+async function loadMap(){
 
-    try {
+try{
 
-        /*
-         * 50m mapa Natural Earth.
-         * Je výrazně vhodnější pro výukovou mapu Afriky.
-         */
-        const world = await d3.json(
-            "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json"
-        );
+const world=await d3.json(
 
-        const allCountries =
-            topojson.feature(
-                world,
-                world.objects.countries
-            ).features;
+"https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json"
 
+);
 
-        countries = allCountries.filter(d => {
+const features=
 
-            const name = d.properties.name;
+topojson.feature(
 
-            return AFRICAN_COUNTRIES.has(name);
+world,
 
-        });
+world.objects.countries
+
+).features;
 
 
-        /*
-         * Pokud se některý stát jmenuje v datech jinak,
-         * upozorníme v konzoli místo toho, aby mapa zmizela.
-         */
+/* všechny africké země */
 
-        console.log(
-            "Počet afrických států nalezených v datech:",
-            countries.length
-        );
+allAfrica=
 
-        console.log(
-            "Státy:",
-            countries.map(d => d.properties.name)
-        );
+features.filter(d=>{
+
+const id=
+
+String(d.id).padStart(3,"0");
+
+return AFRICA_IDS.has(id);
+
+});
 
 
-        drawMap();
+/* 30 států z písemky */
 
-        loadingEl.style.display = "none";
+quizStates=
 
-        startRound();
+features
 
-    } catch (error) {
+.filter(d=>{
 
-        console.error(error);
+const id=
 
-        loadingEl.innerHTML =
-            "❌ Mapu se nepodařilo načíst.<br><br>" +
-            "Zkontroluj připojení k internetu.";
+String(d.id).padStart(3,"0");
 
-    }
+return STATE_NAMES[id];
+
+})
+
+.map(d=>{
+
+const id=
+
+String(d.id).padStart(3,"0");
+
+d.properties=d.properties||{};
+
+d.properties.quizName=
+
+STATE_NAMES[id];
+
+d.properties.mapId=id;
+
+return d;
+
+});
+
+
+loading.style.display="none";
+
+drawMap();
+
+resetGame();
+
+
+}catch(error){
+
+console.error(error);
+
+loading.innerHTML=
+
+"❌ Mapu se nepodařilo načíst.<br><br>"+
+
+"Zkontroluj připojení k internetu.";
+
+}
 
 }
 
 
 /* =========================================================
-   VYKRESLENÍ MAPY
+   VYKRESLENÍ AFRIKY
 ========================================================= */
 
-function drawMap() {
+function drawMap(){
 
-    const box =
-        document.getElementById("mapBox");
+const box=
 
-    const width =
-        Math.min(
-            box.clientWidth - 14,
-            850
-        );
+document.getElementById("mapBox");
 
-    /*
-     * Poměr stran mapy.
-     * Výška je záměrně větší, aby se Afrika
-     * na telefonu nezmáčkla.
-     */
-    const height =
-        width * 1.32;
+const width=
 
+Math.min(
 
-    svg
-        .attr("viewBox", `0 0 ${width} ${height}`)
-        .attr("width", width)
-        .attr("height", height);
+box.clientWidth-10,
+
+900
+
+);
+
+const height=
+
+width*1.12;
 
 
-    /*
-     * Natural Earth projekce.
-     * Fitujeme přímo podle Afriky,
-     * takže se mapa automaticky vejde
-     * a nic se neusekne.
-     */
+svg
 
-    const collection = {
-        type: "FeatureCollection",
-        features: countries
-    };
+.attr(
 
+"viewBox",
 
-    const projection =
-        d3.geoNaturalEarth1()
-          .fitExtent(
-              [
-                  [8, 8],
-                  [width - 8, height - 8]
-              ],
-              collection
-          );
+`0 0 ${width} ${height}`
+
+)
+
+.attr("width",width)
+
+.attr("height",height);
 
 
-    path = d3.geoPath()
-             .projection(projection);
+const collection={
+
+type:"FeatureCollection",
+
+features:allAfrica
+
+};
 
 
-    svg.selectAll("*").remove();
+projection=
+
+d3.geoNaturalEarth1()
+
+.fitExtent(
+
+[
+
+[10,8],
+
+[width-10,height-8]
+
+],
+
+collection
+
+);
 
 
-    /*
-     * Všechny africké státy
-     */
-    svg
-        .selectAll(".country")
-        .data(countries)
-        .enter()
-        .append("path")
-        .attr("class", "country")
-        .attr("d", path)
-        .attr("data-name", d =>
-            d.properties.name
-        )
-        .on("click", function(event, d) {
+path=
 
-            handleCountryClick(d);
+d3.geoPath()
 
-        });
+.projection(projection);
 
 
-    /*
-     * Debug:
-     * pokud se některá země nevykreslí,
-     * vypíše se do konzole její název.
-     */
+svg.selectAll("*").remove();
+
+
+/* skutečné hranice všech afrických států */
+
+svg
+
+.selectAll(".country")
+
+.data(allAfrica)
+
+.enter()
+
+.append("path")
+
+.attr("class","country")
+
+.attr("d",path);
+
+
+renderQuizLayers();
 
 }
 
 
 /* =========================================================
-   VÝBĚR STÁTU
+   KLIKACÍ VRSTVA
 ========================================================= */
 
-function handleCountryClick(country) {
+function renderQuizLayers(){
 
-    if (locked) return;
+svg.selectAll(".quizLayer").remove();
 
-    const clickedName =
-        country.properties.name;
+if(!current)return;
 
-    const correctName =
-        currentCountry.properties.name;
+const layer=
 
+svg.append("g")
 
-    if (clickedName === correctName) {
-
-        correct++;
-        attempts++;
-
-        correctEl.textContent = correct;
-
-        d3.select(
-            `path[data-name="${CSS.escape(clickedName)}"]`
-        )
-        .classed("correct", true);
+.attr("class","quizLayer");
 
 
-        resultEl.textContent =
-            "✅ Správně!";
+const vb=
 
-        resultEl.style.color =
-            "#25833b";
+svg
 
+.attr("viewBox")
 
-        if (mode === "test") {
+.split(" ")
 
-            updateScore();
-
-        }
+.map(Number);
 
 
-        locked = true;
+if(section==="states"){
 
-        setTimeout(() => {
+if(current.type==="state"){
 
-            clearColors();
+layer
 
-            startRound();
+.append("path")
 
-        }, 900);
+.datum(current.feature)
 
+.attr("class","hit")
 
-    } else {
+.attr("d",path)
 
-        attempts++;
+.on("click",
 
-        d3.select(
-            `path[data-name="${CSS.escape(clickedName)}"]`
-        )
-        .classed("wrong", true);
+(e,d)=>answerState(d)
 
+);
 
-        if (mode === "learn") {
+}else{
 
-            /*
-             * VE VÝUCE ukážeme správnou odpověď.
-             */
+layer
 
-            d3.select(
-                `path[data-name="${CSS.escape(correctName)}"]`
-            )
-            .classed("answer", true);
+.append("rect")
 
+.attr("x",0)
 
-            resultEl.innerHTML =
-                "❌ To není " +
-                clickedName +
-                ".<br>" +
-                "✅ Správně je označený stát: " +
-                correctName;
+.attr("y",0)
 
-            resultEl.style.color =
-                "#b3261e";
+.attr("width",vb[2])
 
+.attr("height",vb[3])
 
-            locked = true;
+.attr("fill","transparent")
 
-            setTimeout(() => {
+.on("click",answerCity);
 
-                clearColors();
+}
 
-                startRound();
+}else{
 
-            }, 2200);
+layer
 
+.append("rect")
 
-        } else {
+.attr("x",0)
 
-            /*
-             * V TESTU pouze označíme chybu.
-             * Správnou odpověď zatím neprozradíme.
-             */
+.attr("y",0)
 
-            resultEl.textContent =
-                "❌ Špatně – zkus to znovu.";
+.attr("width",vb[2])
 
-            resultEl.style.color =
-                "#b3261e";
+.attr("height",vb[3])
 
+.attr("fill","transparent")
 
-            updateScore();
+.on("click",answerPhysical);
 
-        }
-
-    }
+}
 
 }
 
 
 /* =========================================================
-   NOVÁ OTÁZKA
+   ZAMÍCHÁNÍ
 ========================================================= */
 
-function startRound() {
+function shuffle(array){
 
-    if (!countries.length) return;
+const result=[...array];
 
+for(
 
-    locked = false;
+let i=result.length-1;
 
-    resultEl.textContent = "";
+i>0;
 
-    clearColors();
+i--
 
+){
 
-    /*
-     * Náhodný stát
-     */
-    currentCountry =
-        countries[
-            Math.floor(
-                Math.random() * countries.length
-            )
-        ];
+const j=
 
+Math.floor(
 
-    const name =
-        currentCountry.properties.name;
+Math.random()*(i+1)
 
+);
 
-    questionEl.textContent =
-        "Najdi na mapě: " + name;
+[result[i],result[j]]=
 
+[result[j],result[i]];
 
-    if (mode === "learn") {
+}
 
-        modeText.textContent =
-            "Výuka";
-
-    } else {
-
-        modeText.textContent =
-            "Test";
-
-    }
+return result;
 
 }
 
 
 /* =========================================================
-   VYČIŠTĚNÍ BAREV
+   VYTVOŘENÍ OTÁZEK
 ========================================================= */
 
-function clearColors() {
+function buildQuestions(){
 
-    svg
-        .selectAll(".country")
-        .classed("correct", false)
-        .classed("wrong", false)
-        .classed("answer", false)
-        .classed("selected", false);
+if(section==="physical"){
+
+questions=
+
+shuffle(
+
+PHYSICAL.map(
+
+(p,i)=>({
+
+type:"physical",
+
+id:i,
+
+name:p[0],
+
+lon:p[1],
+
+lat:p[2],
+
+shape:p[3]
+
+})
+
+)
+
+)
+
+.slice(
+
+0,
+
+Math.min(
+
+totalQuestions,
+
+PHYSICAL.length
+
+)
+
+);
+
+}else{
+
+const states=
+
+quizStates.map(f=>({
+
+type:"state",
+
+id:f.properties.mapId,
+
+name:f.properties.quizName,
+
+feature:f
+
+}));
+
+
+const cities=
+
+CITIES.map((c,i)=>({
+
+type:"city",
+
+id:i,
+
+name:c[0],
+
+lon:c[1],
+
+lat:c[2]
+
+}));
+
+
+questions=
+
+shuffle(
+
+[...states,...cities]
+
+)
+
+.slice(
+
+0,
+
+Math.min(
+
+totalQuestions,
+
+50
+
+)
+
+);
+
+}
 
 }
 
 
 /* =========================================================
-   ÚSPĚŠNOST
+   RESET
 ========================================================= */
 
-function updateScore() {
+function resetGame(){
 
-    if (attempts === 0) {
+correct=0;
 
-        percentEl.textContent = "0";
+wrong=0;
 
-        return;
+currentIndex=0;
 
-    }
+locked=false;
 
+$("correct").textContent="0";
 
-    const percentage =
-        Math.round(
-            (correct / attempts) * 100
-        );
+$("wrong").textContent="0";
 
+$("percent").textContent="0";
 
-    percentEl.textContent =
-        percentage;
+final.classList.add("hidden");
+
+buildQuestions();
+
+nextQuestion();
 
 }
 
 
 /* =========================================================
-   PŘEPNUTÍ NA VÝUKU
+   DALŠÍ OTÁZKA
 ========================================================= */
 
-learnBtn.addEventListener("click", () => {
+function nextQuestion(){
 
-    mode = "learn";
+clearColors();
 
-    learnBtn.classList.add("active");
-    testBtn.classList.remove("active");
+locked=false;
 
-    scoreEl.classList.add("hidden");
 
-    correct = 0;
-    attempts = 0;
+if(currentIndex>=questions.length){
 
-    correctEl.textContent = "0";
+finishTest();
 
-    clearColors();
+return;
 
-    startRound();
+}
+
+
+current=
+
+questions[currentIndex];
+
+
+$("question").textContent=
+
+"Najdi na mapě: "+
+
+current.name;
+
+
+$("progress").textContent=
+
+`Otázka ${currentIndex+1} z ${questions.length}`;
+
+
+$("result").textContent="";
+
+
+renderQuizLayers();
+
+}
+
+
+/* =========================================================
+   STÁT
+========================================================= */
+
+function answerState(feature){
+
+if(locked)return;
+
+
+const id=
+
+String(feature.id).padStart(3,"0");
+
+
+if(id===current.id){
+
+correct++;
+
+markState(
+
+current.id,
+
+"correct"
+
+);
+
+success(
+
+"✅ Správně!"
+
+);
+
+}else{
+
+wrong++;
+
+markState(
+
+id,
+
+"wrong"
+
+);
+
+
+if(mode==="learn"){
+
+markState(
+
+current.id,
+
+"answer"
+
+);
+
+error(
+
+"❌ To není "+
+
+(feature.properties.quizName||"tento stát")+
+
+".<br>✅ Správně je: "+
+
+current.name
+
+);
+
+}else{
+
+error("❌ Špatně.");
+
+}
+
+}
+
+
+afterAnswer();
+
+}
+
+
+/* =========================================================
+   PŘEVOD KLIKNUTÍ NA SOUŘADNICE MAPY
+========================================================= */
+
+function clickPoint(event){
+
+const rect=
+
+svg.node().getBoundingClientRect();
+
+const vb=
+
+svg
+
+.attr("viewBox")
+
+.split(" ")
+
+.map(Number);
+
+
+return [
+
+(event.clientX-rect.left)*vb[2]/rect.width,
+
+(event.clientY-rect.top)*vb[3]/rect.height
+
+];
+
+}
+
+
+function distance(a,b){
+
+return Math.hypot(
+
+a[0]-b[0],
+
+a[1]-b[1]
+
+);
+
+}
+
+
+/* =========================================================
+   MĚSTA
+========================================================= */
+
+function answerCity(event){
+
+if(locked)return;
+
+
+const click=
+
+clickPoint(event);
+
+
+const target=
+
+projection([
+
+current.lon,
+
+current.lat
+
+]);
+
+
+const width=
+
++svg
+
+.attr("viewBox")
+
+.split(" ")[2];
+
+
+const tolerance=
+
+Math.max(
+
+22,
+
+width*.028
+
+);
+
+
+if(
+
+distance(
+
+click,
+
+target
+
+)<=tolerance
+
+){
+
+correct++;
+
+revealCurrent();
+
+success(
+
+"✅ Správně!"
+
+);
+
+}else{
+
+wrong++;
+
+
+if(mode==="learn"){
+
+revealCurrent();
+
+error(
+
+"❌ Tady město není.<br>"+
+
+"✅ Správně je: "+
+
+current.name
+
+);
+
+}else{
+
+error("❌ Špatně.");
+
+}
+
+}
+
+
+afterAnswer();
+
+}
+
+
+/* =========================================================
+   FYZICKÁ GEOGRAFIE
+========================================================= */
+
+function answerPhysical(event){
+
+if(locked)return;
+
+
+const click=
+
+clickPoint(event);
+
+
+const target=
+
+projection([
+
+current.lon,
+
+current.lat
+
+]);
+
+
+const width=
+
++svg
+
+.attr("viewBox")
+
+.split(" ")[2];
+
+
+let tolerance;
+
+
+if(current.shape==="point"){
+
+tolerance=
+
+Math.max(
+
+18,
+
+width*.025
+
+);
+
+}else if(current.shape==="line"){
+
+tolerance=
+
+Math.max(
+
+30,
+
+width*.055
+
+);
+
+}else{
+
+tolerance=
+
+Math.max(
+
+48,
+
+width*.085
+
+);
+
+}
+
+
+if(
+
+distance(
+
+click,
+
+target
+
+)<=tolerance
+
+){
+
+correct++;
+
+revealCurrent();
+
+success(
+
+"✅ Správně!"
+
+);
+
+}else{
+
+wrong++;
+
+
+if(mode==="learn"){
+
+revealCurrent();
+
+error(
+
+"❌ Tady se pojem nenachází.<br>"+
+
+"✅ Správná poloha: "+
+
+current.name
+
+);
+
+}else{
+
+error("❌ Špatně.");
+
+}
+
+}
+
+
+afterAnswer();
+
+}
+
+
+/* =========================================================
+   ZOBRAZENÍ SPRÁVNÉ ODPOVĚDI
+========================================================= */
+
+function revealCurrent(){
+
+svg
+
+.selectAll(".revealLayer")
+
+.remove();
+
+
+const g=
+
+svg
+
+.append("g")
+
+.attr("class","revealLayer");
+
+
+if(current.type==="state"){
+
+g
+
+.append("path")
+
+.datum(current.feature)
+
+.attr("class","country answer")
+
+.attr("d",path);
+
+return;
+
+}
+
+
+const [x,y]=
+
+projection([
+
+current.lon,
+
+current.lat
+
+]);
+
+
+if(current.shape==="line"){
+
+g
+
+.append("path")
+
+.attr(
+
+"class",
+
+"physicalLine"
+
+)
+
+.attr(
+
+"d",
+
+`M ${x-48} ${y+24}
+
+Q ${x} ${y}
+
+${x+48} ${y-24}`
+
+);
+
+}else if(current.shape==="area"){
+
+g
+
+.append("ellipse")
+
+.attr(
+
+"class",
+
+"physicalArea"
+
+)
+
+.attr("cx",x)
+
+.attr("cy",y)
+
+.attr("rx",58)
+
+.attr("ry",34);
+
+}else{
+
+g
+
+.append("circle")
+
+.attr(
+
+"class",
+
+"physicalPoint"
+
+)
+
+.attr("cx",x)
+
+.attr("cy",y)
+
+.attr("r",9);
+
+}
+
+
+g
+
+.append("text")
+
+.attr(
+
+"class",
+
+"revealLabel"
+
+)
+
+.attr("x",x+10)
+
+.attr("y",y-10)
+
+.text(current.name);
+
+}
+
+
+/* =========================================================
+   PO ODPOVĚDI
+========================================================= */
+
+function afterAnswer(){
+
+updateStats();
+
+locked=true;
+
+
+let delay=800;
+
+
+if(
+
+mode==="learn" &&
+
+wrong>0
+
+){
+
+delay=1900;
+
+}
+
+
+setTimeout(()=>{
+
+currentIndex++;
+
+nextQuestion();
+
+},delay);
+
+}
+
+
+/* =========================================================
+   ZPRÁVY
+========================================================= */
+
+function success(text){
+
+$("result").innerHTML=text;
+
+$("result").style.color="#25833b";
+
+}
+
+
+function error(text){
+
+$("result").innerHTML=text;
+
+$("result").style.color="#b3261e";
+
+}
+
+
+/* =========================================================
+   OZNAČENÍ STÁTU
+========================================================= */
+
+function markState(id,cls){
+
+svg
+
+.selectAll(".country")
+
+.filter(
+
+d=>
+
+String(d.id)
+
+.padStart(3,"0")
+
+===id
+
+)
+
+.classed(
+
+cls,
+
+true
+
+);
+
+}
+
+
+/* =========================================================
+   STATISTIKA
+========================================================= */
+
+function updateStats(){
+
+$("correct").textContent=
+
+correct;
+
+$("wrong").textContent=
+
+wrong;
+
+
+const answered=
+
+correct+wrong;
+
+
+const percentage=
+
+answered
+
+?
+
+Math.round(
+
+correct/answered*100
+
+)
+
+:0;
+
+
+$("percent").textContent=
+
+percentage;
+
+}
+
+
+/* =========================================================
+   KONEC
+========================================================= */
+
+function finishTest(){
+
+locked=true;
+
+
+const total=
+
+questions.length;
+
+
+const percentage=
+
+total
+
+?
+
+Math.round(
+
+correct/total*100
+
+)
+
+:0;
+
+
+$("finalPercent").textContent=
+
+percentage;
+
+
+$("finalCorrect").textContent=
+
+correct;
+
+
+$("finalWrong").textContent=
+
+wrong;
+
+
+$("finalTotal").textContent=
+
+total;
+
+
+let message;
+
+
+if(mode==="learn"){
+
+message=
+
+"Výukové kolo dokončeno. Teď můžeš zkusit písemku.";
+
+}else if(percentage>=90){
+
+message=
+
+"🏆 Výborně!";
+
+}else if(percentage>=75){
+
+message=
+
+"👏 Velmi dobrý výsledek.";
+
+}else if(percentage>=60){
+
+message=
+
+"👍 Dobrý základ, ještě trochu procvičit.";
+
+}else{
+
+message=
+
+"📚 Doporučení: vrať se do Výuky.";
+
+}
+
+
+$("finalMessage").textContent=
+
+message;
+
+
+$("question").textContent=
+
+"Hotovo";
+
+
+$("progress").textContent="";
+
+
+$("result").textContent="";
+
+
+final.classList.remove(
+
+"hidden"
+
+);
+
+}
+
+
+/* =========================================================
+   REŽIM VÝUKA
+========================================================= */
+
+learnBtn.onclick=()=>{
+
+mode="learn";
+
+learnBtn.classList.add("active");
+
+testBtn.classList.remove("active");
+
+resetGame();
+
+};
+
+
+/* =========================================================
+   REŽIM TEST
+========================================================= */
+
+testBtn.onclick=()=>{
+
+mode="test";
+
+testBtn.classList.add("active");
+
+learnBtn.classList.remove("active");
+
+resetGame();
+
+};
+
+
+/* =========================================================
+   FYZICKÁ GEOGRAFIE
+========================================================= */
+
+physicalBtn.onclick=()=>{
+
+section="physical";
+
+physicalBtn.classList.add("active");
+
+statesBtn.classList.remove("active");
+
+resetGame();
+
+};
+
+
+/* =========================================================
+   STÁTY A MĚSTA
+========================================================= */
+
+statesBtn.onclick=()=>{
+
+section="states";
+
+statesBtn.classList.add("active");
+
+physicalBtn.classList.remove("active");
+
+resetGame();
+
+};
+
+
+/* =========================================================
+   POČET OTÁZEK
+========================================================= */
+
+document
+
+.querySelectorAll("[data-count]")
+
+.forEach(button=>{
+
+button.onclick=()=>{
+
+totalQuestions=
+
+Number(
+
+button.dataset.count
+
+);
+
+
+document
+
+.querySelectorAll("[data-count]")
+
+.forEach(b=>
+
+b.classList.remove("active")
+
+);
+
+
+button.classList.add("active");
+
+
+resetGame();
+
+};
 
 });
 
 
 /* =========================================================
-   PŘEPNUTÍ NA TEST
+   NOVÁ PÍSESEMKA
 ========================================================= */
 
-testBtn.addEventListener("click", () => {
+$("againBtn").onclick=()=>{
 
-    mode = "test";
+mode="test";
 
-    testBtn.classList.add("active");
-    learnBtn.classList.remove("active");
+testBtn.classList.add("active");
 
-    scoreEl.classList.remove("hidden");
+learnBtn.classList.remove("active");
 
-    correct = 0;
-    attempts = 0;
+resetGame();
 
-    correctEl.textContent = "0";
-    percentEl.textContent = "0";
-
-    clearColors();
-
-    startRound();
-
-});
+};
 
 
 /* =========================================================
-   RESTART
+   PROCVIČOVÁNÍ
 ========================================================= */
 
-restartBtn.addEventListener("click", () => {
+$("learnAgainBtn").onclick=()=>{
 
-    correct = 0;
-    attempts = 0;
+mode="learn";
 
-    correctEl.textContent = "0";
-    percentEl.textContent = "0";
+learnBtn.classList.add("active");
 
-    resultEl.textContent = "";
+testBtn.classList.remove("active");
 
-    clearColors();
+resetGame();
 
-    startRound();
-
-});
+};
 
 
 /* =========================================================
-   PŘIZPŮSOBENÍ TELEFONU
+   ZMĚNA VELIKOSTI
 ========================================================= */
 
 window.addEventListener(
-    "resize",
-    () => {
 
-        if (countries.length) {
+"resize",
 
-            drawMap();
+()=>{
 
-        }
+if(allAfrica.length){
 
-    }
+const old=current;
+
+drawMap();
+
+current=old;
+
+renderQuizLayers();
+
+}
+
+}
+
 );
 
 
