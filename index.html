@@ -1,1 +1,251 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Afrika – slepá mapa</title>
 
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+  margin: 0;
+  padding: 15px;
+  text-align: center;
+}
+
+h1 {
+  margin: 5px 0;
+}
+
+#question {
+  font-size: 22px;
+  font-weight: bold;
+  margin: 15px;
+}
+
+#map {
+  width: 100%;
+  max-width: 850px;
+  height: 65vh;
+  margin: auto;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 2px 8px #bbb;
+}
+
+.country {
+  fill: #e5e5e5;
+  stroke: #555;
+  stroke-width: 0.7;
+  cursor: pointer;
+}
+
+.country:hover {
+  fill: #bde0fe;
+}
+
+.correct {
+  fill: #65c466 !important;
+}
+
+.wrong {
+  fill: #ef6c6c !important;
+}
+
+#result {
+  font-size: 20px;
+  font-weight: bold;
+  min-height: 30px;
+}
+
+button {
+  font-size: 18px;
+  padding: 10px 20px;
+  margin: 5px;
+  border: none;
+  border-radius: 10px;
+  background: #1976d2;
+  color: white;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+</style>
+</head>
+
+<body>
+
+<h1>🌍 Afrika – slepá mapa</h1>
+
+<div id="question">Načítám mapu…</div>
+
+<div id="result"></div>
+
+<svg id="map" viewBox="0 0 800 800"></svg>
+
+<button onclick="newQuestion()">Další otázka</button>
+<button onclick="resetGame()">Začít znovu</button>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+
+<script>
+
+const svg = d3.select("#map");
+
+const countries = {
+  "Alžírsko": "12",
+  "Angola": "24",
+  "Benin": "204",
+  "Botswana": "72",
+  "Burkina Faso": "854",
+  "Burundi": "108",
+  "Čad": "148",
+  "Džibutsko": "262",
+  "Egypt": "818",
+  "Eritrea": "232",
+  "Eswatini": "748",
+  "Etiopie": "231",
+  "Gabon": "266",
+  "Gambie": "270",
+  "Ghana": "288",
+  "Guinea": "324",
+  "Guinea-Bissau": "624",
+  "Jihoafrická republika": "710",
+  "Jižní Súdán": "728",
+  "Kamerun": "120",
+  "Keňa": "404",
+  "Komory": "174",
+  "Kongo": "178",
+  "Demokratická republika Kongo": "180",
+  "Lesotho": "426",
+  "Libérie": "430",
+  "Libye": "434",
+  "Madagaskar": "450",
+  "Malawi": "454",
+  "Mali": "466",
+  "Maroko": "504",
+  "Mauricius": "480",
+  "Mauritánie": "478",
+  "Mosambik": "508",
+  "Namibie": "516",
+  "Niger": "562",
+  "Nigérie": "566",
+  "Rovníková Guinea": "226",
+  "Rwanda": "646",
+  "Senegal": "686",
+  "Seychely": "690",
+  "Sierra Leone": "694",
+  "Somálsko": "706",
+  "Středoafrická republika": "140",
+  "Súdán": "729",
+  "Tanzanie": "834",
+  "Togo": "768",
+  "Tunisko": "788",
+  "Uganda": "800",
+  "Zambie": "894",
+  "Zimbabwe": "716"
+};
+
+let data;
+let currentCountry;
+let score = 0;
+let total = 0;
+
+const projection = d3.geoMercator()
+  .center([20, 2])
+  .scale(430)
+  .translate([400, 400]);
+
+const path = d3.geoPath().projection(projection);
+
+fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
+.then(response => response.json())
+.then(world => {
+
+  const all = topojson.feature(
+    world,
+    world.objects.countries
+  );
+
+  data = all.features.filter(d =>
+    Object.values(countries).includes(String(d.id))
+  );
+
+  svg.selectAll("path")
+    .data(data)
+    .enter()
+    .append("path")
+    .attr("class", "country")
+    .attr("d", path)
+    .attr("data-id", d => d.id)
+    .on("click", function(event, d) {
+      checkAnswer(d.id, this);
+    });
+
+  newQuestion();
+});
+
+function newQuestion() {
+
+  if (!data) return;
+
+  d3.selectAll(".country")
+    .classed("correct", false)
+    .classed("wrong", false);
+
+  const names = Object.keys(countries);
+
+  currentCountry =
+    names[Math.floor(Math.random() * names.length)];
+
+  document.getElementById("question").textContent =
+    "Najdi na mapě: " + currentCountry;
+
+  document.getElementById("result").textContent = "";
+}
+
+function checkAnswer(id, element) {
+
+  const correctId = countries[currentCountry];
+
+  if (String(id) === correctId) {
+
+    element.classList.add("correct");
+
+    score++;
+    total++;
+
+    document.getElementById("result").textContent =
+      "✅ Správně!";
+
+    setTimeout(newQuestion, 700);
+
+  } else {
+
+    element.classList.add("wrong");
+
+    total++;
+
+    document.getElementById("result").textContent =
+      "❌ To není " + currentCountry;
+  }
+}
+
+function resetGame() {
+
+  score = 0;
+  total = 0;
+
+  document.getElementById("result").textContent =
+    "Skóre: 0";
+
+  newQuestion();
+}
+
+</script>
+
+</body>
+</html>
